@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial 8 — Random Variables | PRP1046</title>
+
+<!-- MathJax for rendering math equations -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy-deep: #0a1428;
+  --navy-mid: #142850;
+  --navy-light: #1e3a6f;
+  --gold: #d4af37;
+  --gold-soft: #e8c862;
+  --gold-glow: rgba(212, 175, 55, 0.3);
+  --cream: #f5e9c9;
+  --text: #e8e4d8;
+  --text-dim: #b8b3a3;
+  --accent-teal: #4ecdc4;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  background: var(--navy-deep);
+  color: var(--text);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(78, 205, 196, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 50%, var(--navy-deep) 100%);
+  z-index: -2;
+}
+
+.math-decor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+.math-decor span {
+  position: absolute;
+  color: var(--gold);
+  opacity: 0.06;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  user-select: none;
+  animation: float 20s infinite ease-in-out;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(10, 20, 40, 0.6);
+  backdrop-filter: blur(8px);
+}
+.brand {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.brand-sub {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.progress-text {
+  color: var(--gold-soft);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+}
+.progress-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+  transition: width 0.4s ease;
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+
+.slide-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 4rem;
+  overflow-y: auto;
+}
+
+.slide {
+  display: none;
+  width: 100%;
+  max-width: 1000px;
+  animation: slideIn 0.5s ease;
+}
+.slide.active { display: block; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title-slide {
+  text-align: center;
+  padding: 2rem 0;
+}
+.title-ornament {
+  color: var(--gold);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: 1rem;
+}
+.title-eyebrow {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-soft);
+  letter-spacing: 0.4em;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.title-main {
+  font-family: 'Cinzel', serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--cream) 50%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+.title-sub {
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+.title-meta {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+.meta-item { text-align: center; }
+.meta-label {
+  color: var(--gold-soft);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-family: 'Cinzel', serif;
+}
+.meta-value {
+  color: var(--text);
+  font-size: 1.1rem;
+  margin-top: 0.3rem;
+}
+
+.q-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  padding-bottom: 1rem;
+}
+.q-number {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 2.3rem;
+  font-weight: 700;
+}
+.q-tag {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-soft);
+  padding: 0.25rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.15em;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+.q-clo {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: auto;
+}
+
+.q-body {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+.q-body .highlight {
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+.q-pdf-block {
+  background: rgba(20, 40, 80, 0.4);
+  border-left: 3px solid var(--gold);
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  font-size: 1.15rem;
+  text-align: center;
+  color: var(--cream);
+}
+
+.solution-card {
+  background: linear-gradient(135deg, rgba(20, 40, 80, 0.6), rgba(30, 58, 111, 0.4));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  position: relative;
+}
+.solution-card::before {
+  content: '✦ SOLUTION ✦';
+  position: absolute;
+  top: -10px;
+  left: 1.5rem;
+  background: var(--navy-deep);
+  color: var(--gold);
+  padding: 0 0.8rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+}
+.sol-step {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  position: relative;
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+.sol-step::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: 1.2rem;
+}
+.sol-step .label {
+  color: var(--gold-soft);
+  font-weight: 600;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.sol-math {
+  display: block;
+  text-align: center;
+  margin: 0.6rem 0;
+  font-size: 1.15rem;
+  color: var(--cream);
+}
+.sol-final {
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(232, 200, 98, 0.08));
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
+.sol-final-label {
+  color: var(--gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  margin-bottom: 0.4rem;
+}
+.sol-final-value {
+  color: var(--cream);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Distribution table */
+.dist-table {
+  width: 100%;
+  max-width: 500px;
+  margin: 1rem auto;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+}
+.dist-table th, .dist-table td {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--gold);
+  text-align: center;
+  color: var(--cream);
+}
+.dist-table th {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.1em;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(10, 20, 40, 0.6);
+  backdrop-filter: blur(8px);
+}
+.nav-btn {
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+  color: var(--gold);
+  border: 2px solid var(--gold);
+  padding: 0.7rem 1.8rem;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  min-width: 110px;
+}
+.nav-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  color: var(--navy-deep);
+  box-shadow: 0 4px 16px var(--gold-glow);
+  transform: translateY(-2px);
+}
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: rgba(212, 175, 55, 0.4);
+}
+.slide-dots {
+  display: flex;
+  gap: 0.3rem;
+  max-width: 400px;
+  overflow-x: auto;
+  padding: 0.3rem;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.25);
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.dot.active {
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold-glow);
+  transform: scale(1.4);
+}
+
+.kbd-hint {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: rgba(10, 20, 40, 0.8);
+  color: var(--text-dim);
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.kbd-hint kbd {
+  background: var(--navy-mid);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--gold);
+  color: var(--gold-soft);
+  margin: 0 0.2rem;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--navy-deep); }
+::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+
+@media (max-width: 768px) {
+  .slide-area { padding: 1rem; }
+  .title-main { font-size: 2.2rem; }
+  .q-number { font-size: 1.7rem; }
+  .q-body { font-size: 1.05rem; }
+  .progress-bar { width: 100px; }
+  .kbd-hint { display: none; }
+}
+
+/* PASSWORD PROTECTION */
+#passwordOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--navy-deep);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+#passwordOverlay.hidden { display: none; }
+.password-box {
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.password-title {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.2em;
+}
+.password-subtitle {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+#passwordInput {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: rgba(10, 20, 40, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s;
+}
+#passwordInput:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+#passwordBtn {
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  color: var(--navy-deep);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+#passwordBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--gold-glow);
+}
+.password-error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+  min-height: 20px;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- PASSWORD PROTECTION -->
+<div id="passwordOverlay">
+  <div class="password-box">
+    <div class="password-title">PROTECTED</div>
+    <div class="password-subtitle">Tutorial 8 · PRP1046</div>
+    <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
+    <button id="passwordBtn" onclick="checkPassword()">UNLOCK</button>
+    <div class="password-error" id="passwordError"></div>
+  </div>
+</div>
+
+<div class="math-decor" id="mathDecor"></div>
+
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="brand">PRP 1046 · MATHEMATICS II</div>
+      <div class="brand-sub">Learning Unit 8 — Random Variables</div>
+    </div>
+    <div class="progress-info">
+      <div class="progress-text" id="progressText">01 / 54</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div class="slide-area" id="slideArea">
+
+    <!-- TITLE -->
+    <div class="slide active">
+      <div class="title-slide">
+        <div class="title-ornament">✦ ✧ ✦</div>
+        <div class="title-eyebrow">TUTORIAL EIGHT</div>
+        <h1 class="title-main">Random<br>Variables</h1>
+        <div class="title-sub">~ Discrete & Continuous Distributions ~</div>
+        <div class="title-meta">
+          <div class="meta-item">
+            <div class="meta-label">Course</div>
+            <div class="meta-value">PRP 1046 Mathematics II</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Unit</div>
+            <div class="meta-value">Learning Unit 8</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Questions</div>
+            <div class="meta-value">10 Problems</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q1 QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.1</div>
+        <div class="q-tag">PDF · IDENTIFY</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Identify whether the following function is a <span class="highlight">probability distribution function</span> or not. Give your reason.
+      </div>
+      <div class="q-pdf-block">
+        $f(x) = \begin{cases} 0.1, & x = 1 \\ 0.2, & x = 2, 4 \\ 0.7, & x = 6 \\ 0, & \text{elsewhere} \end{cases}$
+      </div>
+    </div>
+
+    <!-- Q1 ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.1</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Check sum of probabilities</span>
+          <span class="sol-math">$\sum P(X=x) = 0.1 + 0.2 + 0.2 + 0.7 = 1.2$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Conclusion</span>
+          Untuk PDF, $\sum P(X=x) = 1$. Tetapi di sini $\sum P(X=x) > 1$.
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">NO — sum exceeds 1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2(a)(i) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(a)(i)</div>
+        <div class="q-tag">DISCRETE RV</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Given the discrete random variable X has the PDF where c is constant:
+      </div>
+      <div class="q-pdf-block">
+        $P(X=x) = \dfrac{3 + cx}{21}, \quad x = 1, 2, 3$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">value of c</span>.
+      </div>
+    </div>
+
+    <!-- Q2(a)(i) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(a)(i)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply the rule</span>
+          $\sum P(X=x) = 1$
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          $P(X=1) + P(X=2) + P(X=3) = 1$
+          <span class="sol-math">$\dfrac{3+c}{21} + \dfrac{3+2c}{21} + \dfrac{3+3c}{21} = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Simplify</span>
+          <span class="sol-math">$\dfrac{9 + 6c}{21} = 1 \quad \Rightarrow \quad 9 + 6c = 21$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$c = 2$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2(a)(ii) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(a)(ii)</div>
+        <div class="q-tag">DISCRETE RV</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Given $P(X=x) = \dfrac{3+cx}{21}$ for $x = 1, 2, 3$ with $c = 2$.<br><br>
+        Find <span class="highlight">$P(X=1$ or $X=3)$</span>.
+      </div>
+    </div>
+
+    <!-- Q2(a)(ii) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(a)(ii)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">"OR" → addition (mutually exclusive events)</span>
+          <span class="sol-math">$P(X=1 \text{ or } X=3) = P(X=1) + P(X=3)$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute c = 2</span>
+          <span class="sol-math">$= \dfrac{3 + 2(1)}{21} + \dfrac{3 + 2(3)}{21}$</span>
+          <span class="sol-math">$= \dfrac{5}{21} + \dfrac{9}{21} = \dfrac{14}{21}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{2}{3}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(b)</div>
+        <div class="q-tag">DISCRETE RV</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        <span class="highlight">Tabulate</span> the probability distribution function of X.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $P(X=x) = \dfrac{3+2x}{21}$ for $x = 1, 2, 3$</em>
+      </div>
+    </div>
+
+    <!-- Q2(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.2(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Substitute each x value</span>
+          $P(X=1) = \dfrac{3+2}{21} = \dfrac{5}{21}$<br>
+          $P(X=2) = \dfrac{3+4}{21} = \dfrac{7}{21} = \dfrac{1}{3}$<br>
+          $P(X=3) = \dfrac{3+6}{21} = \dfrac{9}{21} = \dfrac{3}{7}$
+        </div>
+        <div class="sol-step">
+          <span class="label">Tabulate</span>
+          <table class="dist-table">
+            <tr><th>X</th><th>1</th><th>2</th><th>3</th></tr>
+            <tr><td>P(X=x)</td><td>$\dfrac{5}{21}$</td><td>$\dfrac{1}{3}$</td><td>$\dfrac{3}{7}$</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(a)</div>
+        <div class="q-tag">DISCRETE RV · VERIFY</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Given the probability distribution function:
+      </div>
+      <div class="q-pdf-block">
+        $f(x) = \begin{cases} \dfrac{2x^2}{20}, & x = 2 \\ \dfrac{7-2x}{10}, & x = 1, 3 \end{cases}$
+      </div>
+      <div class="q-body">
+        <span class="highlight">Show that X is a discrete random variable.</span>
+      </div>
+    </div>
+
+    <!-- Q3(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate each probability</span>
+          $P(X=1) = \dfrac{7-2(1)}{10} = \dfrac{5}{10} = \dfrac{1}{2}$<br>
+          $P(X=2) = \dfrac{2(2)^2}{20} = \dfrac{8}{20} = \dfrac{2}{5}$<br>
+          $P(X=3) = \dfrac{7-2(3)}{10} = \dfrac{1}{10}$
+        </div>
+        <div class="sol-step">
+          <span class="label">Sum all probabilities</span>
+          <span class="sol-math">$\sum P(X=x) = \dfrac{1}{2} + \dfrac{2}{5} + \dfrac{1}{10} = \dfrac{5+4+1}{10} = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Conclusion</span>
+          Since $\sum P(X=x) = 1$ and all $P(X=x) \geq 0$, X is a discrete random variable. ✓
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3(b)(i) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(b)(i)</div>
+        <div class="q-tag">DISCRETE RV</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Find the probability that <span class="highlight">X is less than 3</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $P(X=1) = \dfrac{1}{2}$, $P(X=2) = \dfrac{2}{5}$, $P(X=3) = \dfrac{1}{10}$</em>
+      </div>
+    </div>
+
+    <!-- Q3(b)(i) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(b)(i)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Method 1: Direct addition</span>
+          <span class="sol-math">$P(X<3) = P(X=1) + P(X=2)$</span>
+          <span class="sol-math">$= \dfrac{1}{2} + \dfrac{2}{5} = \dfrac{5}{10} + \dfrac{4}{10} = \dfrac{9}{10}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Method 2: Complement</span>
+          <span class="sol-math">$P(X<3) = 1 - P(X=3) = 1 - \dfrac{1}{10} = \dfrac{9}{10}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{9}{10}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3(b)(ii) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(b)(ii)</div>
+        <div class="q-tag">CDF</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">cumulative distribution function</span> of X.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">$F(x) = P(X \leq x)$ — accumulated probability</em>
+      </div>
+    </div>
+
+    <!-- Q3(b)(ii) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.3(b)(ii)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate F(x) at each point</span>
+          $F(1) = P(X \leq 1) = P(X=1) = \dfrac{1}{2}$<br>
+          $F(2) = P(X \leq 2) = \dfrac{1}{2} + \dfrac{2}{5} = \dfrac{9}{10}$<br>
+          $F(3) = P(X \leq 3) = \dfrac{1}{2} + \dfrac{2}{5} + \dfrac{1}{10} = 1$
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER — CDF</div>
+          <div class="sol-final-value" style="font-size:1.2rem">
+            $F(x) = \begin{cases} 0, & x < 1 \\ \dfrac{1}{2}, & 1 \leq x < 2 \\ \dfrac{9}{10}, & 2 \leq x < 3 \\ 1, & x \geq 3 \end{cases}$
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.4(a)</div>
+        <div class="q-tag">CONTINUOUS RV · CDF</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        T = time spent on homework. CDF of T:
+      </div>
+      <div class="q-pdf-block">
+        $F(t) = \begin{cases} 0, & t < 0 \\ k(2t^3 - t^4), & 0 \leq t \leq 1.5 \\ 1, & t > 1.5 \end{cases}$
+      </div>
+      <div class="q-body">
+        <span class="highlight">Show that $k = \dfrac{16}{27}$.</span>
+      </div>
+    </div>
+
+    <!-- Q4(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.4(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Use the property of CDF</span>
+          At the upper limit, $F(1.5) = 1$
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute t = 1.5</span>
+          <span class="sol-math">$k(2(1.5)^3 - (1.5)^4) = 1$</span>
+          <span class="sol-math">$k\left[2 \cdot \dfrac{27}{8} - \dfrac{81}{16}\right] = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Simplify</span>
+          <span class="sol-math">$k\left(\dfrac{108 - 81}{16}\right) = 1 \quad \Rightarrow \quad k \cdot \dfrac{27}{16} = 1$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$k = \dfrac{16}{27}$ ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.4(b)</div>
+        <div class="q-tag">PDF FROM CDF</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">probability density function $f(t)$</span> of T.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Key relationship: $f(t) = F'(t)$ — differentiate CDF to get PDF</em>
+      </div>
+    </div>
+
+    <!-- Q4(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.4(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply $f(t) = F'(t)$ for each piece</span>
+          For $t < 0$: $f(t) = \dfrac{d}{dt}(0) = 0$
+        </div>
+        <div class="sol-step">
+          <span class="label">For $0 \leq t \leq 1.5$</span>
+          <span class="sol-math">$f(t) = \dfrac{d}{dt}\left[\dfrac{16}{27}(2t^3 - t^4)\right] = \dfrac{16}{27}(6t^2 - 4t^3)$</span>
+          <span class="sol-math">$= \dfrac{32}{27}(3t^2 - 2t^3)$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">For $t > 1.5$</span>
+          $f(t) = \dfrac{d}{dt}(1) = 0$
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER — PDF</div>
+          <div class="sol-final-value" style="font-size:1.15rem">
+            $f(t) = \begin{cases} \dfrac{32}{27}(3t^2 - 2t^3), & 0 \leq t \leq 1.5 \\ 0, & \text{otherwise} \end{cases}$
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5 QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.5</div>
+        <div class="q-tag">PDF FROM CDF</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="q-body">
+        The CDF of a continuous random variable Y is given by:
+      </div>
+      <div class="q-pdf-block">
+        $F(y) = \begin{cases} 0, & y < 0 \\ 2y - y^2, & 0 \leq y \leq 1 \\ 1, & y > 1 \end{cases}$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">probability density function</span> of Y.
+      </div>
+    </div>
+
+    <!-- Q5 ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.5</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 1</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Differentiate each piece: $f(y) = F'(y)$</span>
+          For $y < 0$: $f(y) = \dfrac{d}{dy}(0) = 0$
+        </div>
+        <div class="sol-step">
+          <span class="label">For $0 \leq y \leq 1$</span>
+          <span class="sol-math">$f(y) = \dfrac{d}{dy}(2y - y^2) = 2 - 2y$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">For $y > 1$</span>
+          $f(y) = \dfrac{d}{dy}(1) = 0$
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER — PDF</div>
+          <div class="sol-final-value" style="font-size:1.2rem">
+            $f(y) = \begin{cases} 2 - 2y, & 0 \leq y \leq 1 \\ 0, & \text{otherwise} \end{cases}$
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q6(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(a)</div>
+        <div class="q-tag">EXPECTATION · MEAN</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        The PDF of Q is:
+      </div>
+      <div class="q-pdf-block">
+        $P(Q=q) = \begin{cases} \dfrac{1}{2q}, & q = 3, 5, 7 \\ \dfrac{139}{210}, & q = 9 \\ 0, & \text{elsewhere} \end{cases}$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">mean</span>, $E(Q)$.
+      </div>
+    </div>
+
+    <!-- Q6(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Formula</span>
+          <span class="sol-math">$E(Q) = \sum q \cdot P(Q=q)$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          <span class="sol-math">$= 3\left(\dfrac{1}{6}\right) + 5\left(\dfrac{1}{10}\right) + 7\left(\dfrac{1}{14}\right) + 9\left(\dfrac{139}{210}\right)$</span>
+          <span class="sol-math">$= \dfrac{1}{2} + \dfrac{1}{2} + \dfrac{1}{2} + \dfrac{1251}{210}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Combine</span>
+          <span class="sol-math">$= \dfrac{315}{210} + \dfrac{1251}{210} = \dfrac{1566}{210}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$E(Q) = \dfrac{261}{35}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q6(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(b)</div>
+        <div class="q-tag">VARIANCE</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">variance</span> of Q.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $E(Q) = \dfrac{261}{35}$. Formula: $\text{Var}(Q) = E(Q^2) - [E(Q)]^2$</em>
+      </div>
+    </div>
+
+    <!-- Q6(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate $E(Q^2)$</span>
+          <span class="sol-math">$E(Q^2) = 3^2\left(\dfrac{1}{6}\right) + 5^2\left(\dfrac{1}{10}\right) + 7^2\left(\dfrac{1}{14}\right) + 9^2\left(\dfrac{139}{210}\right)$</span>
+          <span class="sol-math">$= \dfrac{2139}{35}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Apply variance formula</span>
+          <span class="sol-math">$\text{Var}(Q) = \dfrac{2139}{35} - \left(\dfrac{261}{35}\right)^2$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\text{Var}(Q) = \dfrac{6744}{1225}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q6(c) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(c)</div>
+        <div class="q-tag">LINEAR EXPECTATION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$E(3Q - 5)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $E(Q) = \dfrac{261}{35}$. Property: $E(aQ + b) = aE(Q) + b$</em>
+      </div>
+    </div>
+
+    <!-- Q6(c) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(c)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply linearity of expectation</span>
+          <span class="sol-math">$E(3Q - 5) = 3E(Q) - 5$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          <span class="sol-math">$= 3\left(\dfrac{261}{35}\right) - 5 = \dfrac{783}{35} - \dfrac{175}{35}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{608}{35}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q6(d) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(d)</div>
+        <div class="q-tag">LINEAR VARIANCE</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$\text{Var}(5Q + 6)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $\text{Var}(Q) = \dfrac{6744}{1225}$. Property: $\text{Var}(aQ + b) = a^2 \text{Var}(Q)$</em>
+      </div>
+    </div>
+
+    <!-- Q6(d) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.6(d)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply variance property</span>
+          <span class="sol-math">$\text{Var}(5Q + 6) = 5^2 \cdot \text{Var}(Q) = 25 \cdot \text{Var}(Q)$</span>
+          <em style="color:var(--gold-soft);font-size:0.9rem">Note: constant +6 doesn't affect variance!</em>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          <span class="sol-math">$= 25 \times \dfrac{6744}{1225} = \dfrac{6744}{49}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{6744}{49}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q7(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(a)</div>
+        <div class="q-tag">CONTINUOUS RV · CONSTANT</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        The PDF of X is:
+      </div>
+      <div class="q-pdf-block">
+        $f(x) = \begin{cases} cx^2, & 0 \leq x < 1 \\ 0, & \text{otherwise} \end{cases}$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">value of $c$</span>.
+      </div>
+    </div>
+
+    <!-- Q7(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Property of continuous PDF</span>
+          <span class="sol-math">$\displaystyle\int_{-\infty}^{\infty} f(x)\, dx = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Apply to given range</span>
+          <span class="sol-math">$\displaystyle\int_0^1 cx^2\, dx = 1$</span>
+          <span class="sol-math">$c\left[\dfrac{x^3}{3}\right]_0^1 = 1 \quad \Rightarrow \quad \dfrac{c}{3} = 1$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$c = 3$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q7(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(b)</div>
+        <div class="q-tag">E(X) AND VAR(X)</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$E(X)$ and $\text{Var}(X)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $f(x) = 3x^2$ for $0 \leq x < 1$</em>
+      </div>
+    </div>
+
+    <!-- Q7(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate $E(X)$</span>
+          <span class="sol-math">$E(X) = \displaystyle\int_0^1 x \cdot 3x^2\, dx = \int_0^1 3x^3\, dx = 3\left[\dfrac{x^4}{4}\right]_0^1 = \dfrac{3}{4}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Calculate $E(X^2)$</span>
+          <span class="sol-math">$E(X^2) = \displaystyle\int_0^1 x^2 \cdot 3x^2\, dx = 3\left[\dfrac{x^5}{5}\right]_0^1 = \dfrac{3}{5}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Calculate Var(X)</span>
+          <span class="sol-math">$\text{Var}(X) = \dfrac{3}{5} - \left(\dfrac{3}{4}\right)^2 = \dfrac{48}{80} - \dfrac{45}{80}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWERS</div>
+          <div class="sol-final-value">$E(X) = \dfrac{3}{4}$ &nbsp; · &nbsp; $\text{Var}(X) = \dfrac{3}{80}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q7(c) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(c)</div>
+        <div class="q-tag">LINEAR EXPECTATION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$E(2X + 4)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $E(X) = \dfrac{3}{4}$</em>
+      </div>
+    </div>
+
+    <!-- Q7(c) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(c)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply linearity</span>
+          <span class="sol-math">$E(2X + 4) = 2E(X) + 4$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          <span class="sol-math">$= 2\left(\dfrac{3}{4}\right) + 4 = \dfrac{3}{2} + 4 = \dfrac{3 + 8}{2}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{11}{2}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q7(d) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(d)</div>
+        <div class="q-tag">LINEAR VARIANCE</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$\text{Var}(4X - 1)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $\text{Var}(X) = \dfrac{3}{80}$</em>
+      </div>
+    </div>
+
+    <!-- Q7(d) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.7(d)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply variance property</span>
+          <span class="sol-math">$\text{Var}(4X - 1) = 4^2 \cdot \text{Var}(X) = 16\,\text{Var}(X)$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Substitute</span>
+          <span class="sol-math">$= 16 \times \dfrac{3}{80} = \dfrac{48}{80}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{3}{5}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q8(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.8(a)</div>
+        <div class="q-tag">PIECEWISE PDF</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        The PDF of a continuous random variable is:
+      </div>
+      <div class="q-pdf-block">
+        $f(y) = \begin{cases} py, & 0 \leq y < 1 \\ \dfrac{p}{4}, & 1 \leq y < 3 \\ 0, & \text{otherwise} \end{cases}$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">value of $p$</span>.
+      </div>
+    </div>
+
+    <!-- Q8(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.8(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Set up integral over both pieces</span>
+          <span class="sol-math">$\displaystyle\int_0^1 py\, dy + \int_1^3 \dfrac{p}{4}\, dy = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Evaluate each integral</span>
+          <span class="sol-math">$p\left[\dfrac{y^2}{2}\right]_0^1 + p\left[\dfrac{y}{4}\right]_1^3 = 1$</span>
+          <span class="sol-math">$p\left(\dfrac{1}{2}\right) + \dfrac{p}{4}(3 - 1) = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Simplify</span>
+          <span class="sol-math">$\dfrac{p}{2} + \dfrac{p}{2} = 1 \quad \Rightarrow \quad p = 1$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$p = 1$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q8(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.8(b)</div>
+        <div class="q-tag">MEDIAN</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">median</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Median $m$: $\displaystyle\int_{-\infty}^{m} f(y)\, dy = \dfrac{1}{2}$</em>
+      </div>
+    </div>
+
+    <!-- Q8(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.8(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Set up median equation</span>
+          <span class="sol-math">$\displaystyle\int_0^m y\, dy = \dfrac{1}{2}$</span>
+          <em style="color:var(--gold-soft);font-size:0.9rem">Try $m$ in the first piece [0,1) since first piece accumulates to 1/2 at y=1</em>
+        </div>
+        <div class="sol-step">
+          <span class="label">Solve</span>
+          <span class="sol-math">$\left[\dfrac{y^2}{2}\right]_0^m = \dfrac{1}{2} \quad \Rightarrow \quad \dfrac{m^2}{2} = \dfrac{1}{2}$</span>
+          <span class="sol-math">$m^2 = 1 \quad \Rightarrow \quad m = 1 \text{ or } m = -1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Choose valid value</span>
+          $m = -1$ tidak dalam range, tolak.
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$m = 1$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q9(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.9(a)</div>
+        <div class="q-tag">DISCRETE RV · ABSOLUTE</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        The PDF of discrete RV X is:
+      </div>
+      <div class="q-pdf-block">
+        $P(X=x) = c\left|x - \dfrac{5}{3}\right|, \quad x = 1, 2, 3, 4$
+      </div>
+      <div class="q-body">
+        <span class="highlight">Show that $c = \dfrac{3}{14}$.</span>
+      </div>
+    </div>
+
+    <!-- Q9(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.9(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate each $|x - 5/3|$</span>
+          $|1 - 5/3| = 2/3$<br>
+          $|2 - 5/3| = 1/3$<br>
+          $|3 - 5/3| = 4/3$<br>
+          $|4 - 5/3| = 7/3$
+        </div>
+        <div class="sol-step">
+          <span class="label">Apply $\sum P(X=x) = 1$</span>
+          <span class="sol-math">$\dfrac{2c}{3} + \dfrac{c}{3} + \dfrac{4c}{3} + \dfrac{7c}{3} = 1$</span>
+          <span class="sol-math">$\dfrac{14c}{3} = 1$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$c = \dfrac{3}{14}$ ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q9(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.9(b)</div>
+        <div class="q-tag">PROBABILITY · INEQUALITY</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$P(|X - 2| \leq 1)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $c = \dfrac{3}{14}$, so $P(X=x) = \dfrac{3}{14}\left|x - \dfrac{5}{3}\right|$</em>
+      </div>
+    </div>
+
+    <!-- Q9(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.9(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Unfold absolute value inequality</span>
+          <span class="sol-math">$|X - 2| \leq 1 \Leftrightarrow -1 \leq X - 2 \leq 1 \Leftrightarrow 1 \leq X \leq 3$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Find P(1 ≤ X ≤ 3)</span>
+          <span class="sol-math">$= P(X=1) + P(X=2) + P(X=3)$</span>
+          <span class="sol-math">$= \dfrac{3}{14}\cdot\dfrac{2}{3} + \dfrac{3}{14}\cdot\dfrac{1}{3} + \dfrac{3}{14}\cdot\dfrac{4}{3}$</span>
+          <span class="sol-math">$= \dfrac{1}{7} + \dfrac{1}{14} + \dfrac{2}{7} = \dfrac{2 + 1 + 4}{14}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{1}{2}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q10(a) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(a)</div>
+        <div class="q-tag">PAST YEAR EXAM</div>
+        <div class="q-clo">CLO 2 · 3 marks</div>
+      </div>
+      <div class="q-body">
+        The PDF of discrete RV X:
+      </div>
+      <div class="q-pdf-block">
+        $P(X=x) = \begin{cases} 3Cx, & x = 1, 3 \\ C(x^2 + 4), & x = 2, 4 \end{cases}$
+      </div>
+      <div class="q-body">
+        Find the <span class="highlight">value of $C$</span>.
+      </div>
+    </div>
+
+    <!-- Q10(a) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(a)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2 · 3 marks</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Apply $\sum P(X=x) = 1$</span>
+          <span class="sol-math">$3C(1) + C(2^2 + 4) + 3C(3) + C(4^2 + 4) = 1$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Simplify</span>
+          <span class="sol-math">$3C + 8C + 9C + 20C = 1$</span>
+          <span class="sol-math">$40C = 1$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$C = \dfrac{1}{40}$</div>
+        </div>
+        <em style="color:var(--gold-soft);font-size:0.85rem;margin-top:1rem;display:block">Marking: 1M ∑P(X=x)=1 · 1M correct substitution · 1M correct answer</em>
+      </div>
+    </div>
+
+    <!-- Q10(b) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(b)</div>
+        <div class="q-tag">PAST YEAR EXAM</div>
+        <div class="q-clo">CLO 2 · 2 marks</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$P(1 < X < 3)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $C = \dfrac{1}{40}$. Note: strict inequality "&lt;"</em>
+      </div>
+    </div>
+
+    <!-- Q10(b) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(b)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2 · 2 marks</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Identify range</span>
+          $1 < X < 3$ means only $X = 2$
+        </div>
+        <div class="sol-step">
+          <span class="label">Calculate</span>
+          <span class="sol-math">$P(X=2) = \dfrac{1}{40}(2^2 + 4) = \dfrac{8}{40}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{1}{5}$</div>
+        </div>
+        <em style="color:var(--gold-soft);font-size:0.85rem;margin-top:1rem;display:block">Marking: 1M correct substitution · 1M correct answer</em>
+      </div>
+    </div>
+
+    <!-- Q10(c) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(c)</div>
+        <div class="q-tag">PAST YEAR EXAM</div>
+        <div class="q-clo">CLO 2 · 3 marks</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$E(2X - 3)$</span>.
+      </div>
+    </div>
+
+    <!-- Q10(c) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(c)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2 · 3 marks</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate $E(X)$ first</span>
+          $P(X=1) = \dfrac{3}{40}$, $P(X=2) = \dfrac{8}{40}$, $P(X=3) = \dfrac{9}{40}$, $P(X=4) = \dfrac{20}{40}$
+          <span class="sol-math">$E(X) = 1\cdot\dfrac{3}{40} + 2\cdot\dfrac{8}{40} + 3\cdot\dfrac{9}{40} + 4\cdot\dfrac{20}{40}$</span>
+          <span class="sol-math">$= \dfrac{3 + 16 + 27 + 80}{40} = \dfrac{126}{40} = \dfrac{63}{20}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Apply linearity</span>
+          <span class="sol-math">$E(2X - 3) = 2E(X) - 3 = 2\left(\dfrac{63}{20}\right) - 3 = \dfrac{63}{10} - \dfrac{30}{10}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{33}{10}$ &nbsp; or &nbsp; $3.3$</div>
+        </div>
+        <em style="color:var(--gold-soft);font-size:0.85rem;margin-top:1rem;display:block">Marking: 1M for mean · 1M correct substitution · 1M correct answer</em>
+      </div>
+    </div>
+
+    <!-- Q10(d) QUESTION -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(d)</div>
+        <div class="q-tag">PAST YEAR EXAM</div>
+        <div class="q-clo">CLO 2 · 4 marks</div>
+      </div>
+      <div class="q-body">
+        Find <span class="highlight">$\text{Var}(2X + 2)$</span>.<br><br>
+        <em style="color:var(--text-dim);font-size:0.95rem">Recall: $E(X) = \dfrac{63}{20}$</em>
+      </div>
+    </div>
+
+    <!-- Q10(d) ANSWER -->
+    <div class="slide">
+      <div class="q-header">
+        <div class="q-number">Q.10(d)</div>
+        <div class="q-tag">SOLUTION</div>
+        <div class="q-clo">CLO 2 · 4 marks</div>
+      </div>
+      <div class="solution-card">
+        <div class="sol-step">
+          <span class="label">Calculate $E(X^2)$</span>
+          <span class="sol-math">$E(X^2) = 1^2\cdot\dfrac{3}{40} + 2^2\cdot\dfrac{8}{40} + 3^2\cdot\dfrac{9}{40} + 4^2\cdot\dfrac{20}{40}$</span>
+          <span class="sol-math">$= \dfrac{3 + 32 + 81 + 320}{40} = \dfrac{436}{40} = \dfrac{109}{10}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Calculate Var(X)</span>
+          <span class="sol-math">$\text{Var}(X) = \dfrac{109}{10} - \left(\dfrac{63}{20}\right)^2 = \dfrac{109}{10} - \dfrac{3969}{400} = \dfrac{391}{400}$</span>
+        </div>
+        <div class="sol-step">
+          <span class="label">Apply variance property</span>
+          <span class="sol-math">$\text{Var}(2X + 2) = 2^2 \cdot \text{Var}(X) = 4 \times \dfrac{391}{400}$</span>
+        </div>
+        <div class="sol-final">
+          <div class="sol-final-label">ANSWER</div>
+          <div class="sol-final-value">$\dfrac{391}{100}$ &nbsp; or &nbsp; $3.91$</div>
+        </div>
+        <em style="color:var(--gold-soft);font-size:0.85rem;margin-top:1rem;display:block">Marking: 1M $E(X^2)$ · 1M Var(X) · 1M substitution · 1M answer</em>
+      </div>
+    </div>
+
+    <!-- END SLIDE -->
+    <div class="slide">
+      <div class="title-slide">
+        <div class="title-ornament">✦ ✧ ✦</div>
+        <div class="title-eyebrow">END OF TUTORIAL</div>
+        <h1 class="title-main">Terima Kasih</h1>
+        <div class="title-sub">~ Selamat Belajar! ~</div>
+        <div style="margin-top:2rem;color:var(--text-dim);font-size:1.05rem;line-height:1.7;max-width:600px;margin-left:auto;margin-right:auto">
+          <strong style="color:var(--gold-soft)">Key Formulas:</strong><br><br>
+          $\sum P(X=x) = 1$ &nbsp;·&nbsp; $\displaystyle\int f(x)\,dx = 1$<br><br>
+          $E(X) = \sum xP(X=x)$ &nbsp;·&nbsp; $E(X) = \displaystyle\int xf(x)\,dx$<br><br>
+          $\text{Var}(X) = E(X^2) - [E(X)]^2$<br><br>
+          $E(aX+b) = aE(X)+b$ &nbsp;·&nbsp; $\text{Var}(aX+b) = a^2\text{Var}(X)$
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">◂ PREV</button>
+    <div class="slide-dots" id="slideDots"></div>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">NEXT ▸</button>
+  </div>
+
+</div>
+
+<div class="kbd-hint">
+  Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd>/<kbd>Enter</kbd> to navigate
+</div>
+
+<script>
+// Password protection
+const correctPassword = "An15120467##";
+
+function checkPassword() {
+  const input = document.getElementById('passwordInput');
+  const error = document.getElementById('passwordError');
+  const overlay = document.getElementById('passwordOverlay');
+  
+  if (input.value === correctPassword) {
+    overlay.classList.add('hidden');
+    error.textContent = '';
+  } else {
+    error.textContent = '✗ Password salah. Cuba lagi.';
+    input.value = '';
+    input.focus();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('passwordInput');
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      checkPassword();
+    }
+  });
+  input.focus();
+});
+
+// Main slide functionality
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+
+const dotsContainer = document.getElementById('slideDots');
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goToSlide(i);
+  dotsContainer.appendChild(dot);
+});
+const dots = document.querySelectorAll('.dot');
+
+function updateUI() {
+  slides.forEach((s, i) => s.classList.toggle('active', i === current));
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  document.getElementById('progressText').textContent =
+    String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+  document.getElementById('progressFill').style.width = ((current + 1) / total * 100) + '%';
+  document.getElementById('prevBtn').disabled = (current === 0);
+  document.getElementById('nextBtn').disabled = (current === total - 1);
+  if (window.MathJax && window.MathJax.typeset) {
+    setTimeout(() => MathJax.typeset(), 50);
+  }
+  document.getElementById('slideArea').scrollTop = 0;
+}
+
+function changeSlide(dir) {
+  const next = current + dir;
+  if (next >= 0 && next < total) {
+    current = next;
+    updateUI();
+  }
+}
+
+function goToSlide(i) {
+  current = i;
+  updateUI();
+}
+
+document.addEventListener('keydown', (e) => {
+  // Don't navigate if password overlay is still showing
+  if (!document.getElementById('passwordOverlay').classList.contains('hidden')) return;
+  
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    changeSlide(1);
+  } else if (e.key === 'ArrowLeft') {
+    changeSlide(-1);
+  }
+});
+
+const symbols = ['E', 'P', 'σ', 'μ', '∫', 'Var', 'f(x)', 'F(x)', '∞', 'pdf'];
+const decor = document.getElementById('mathDecor');
+for (let i = 0; i < 18; i++) {
+  const span = document.createElement('span');
+  span.textContent = symbols[i % symbols.length];
+  span.style.left = Math.random() * 100 + '%';
+  span.style.top = Math.random() * 100 + '%';
+  span.style.fontSize = (2 + Math.random() * 4) + 'rem';
+  span.style.animationDelay = (Math.random() * 20) + 's';
+  span.style.animationDuration = (15 + Math.random() * 15) + 's';
+  decor.appendChild(span);
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
